@@ -1,0 +1,113 @@
+true_labels = [1, 2, 0, 1, 2, 1, 0, 2, 1, 2, 2, 0]
+predicted_labels = [1, 2, 0, 1, 2, 2, 2, 1, 0, 1, 1, 0]
+class_dict = {
+0 : "Class A",
+1 : "Class B",
+2 : "Class C",
+}
+
+# Metrics for classification
+from sklearn.metrics import classification_report, confusion_matrix,
+accuracy_score
+import seaborn as sb
+import matplotlib.pyplot as plt
+print("Accuracy :", accuracy_score(true_labels, predicted_labels)* 100)
+print("\n")
+print("Classification Report :", classification_report(true_labels,
+predicted_labels))
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class A"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class B"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class C"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class A",
+"Class B", "Class C"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+
+
+true_labels = [1, 2, 0, 1, 2, 1, 0, 2, 1, 2, 2, 0]
+predicted_labels = [1, 2, 0, 1, 2, 2, 2, 1, 0, 1, 1, 0]
+class_dict = {
+0 : "Class A",
+1 : "Class B",
+2 : "Class C",
+}
+
+# Metrics for classification
+from sklearn.metrics import classification_report, confusion_matrix,
+accuracy_score
+import seaborn as sb
+import matplotlib.pyplot as plt
+print("Accuracy :", accuracy_score(true_labels, predicted_labels)* 100)
+print("\n")
+print("Classification Report :", classification_report(true_labels,
+predicted_labels))
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class A"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class B"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class C"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+cm = confusion_matrix([class_dict[label] for label in true_labels],
+[class_dict[label] for label in predicted_labels], labels=["Class A",
+"Class B", "Class C"])
+sb.heatmap(cm, annot = True, cmap = "Blues")
+plt.show()
+
+
+
+
+confusion_matrix = {
+"Red Disease": {"Red Disease": 92, "Aeromoniasis": 0, "Gill Disease": 3, "Saprolegniasis": 2, "Healthy Fish": 0, "Parasitic
+Disease": 0, "White Tail Disease": 3},
+"Aeromoniasis": {"Red Disease": 0, "Aeromoniasis": 94, "Gill Disease": 3, "Saprolegniasis": 0, "Healthy Fish": 3, "Parasitic
+Disease": 0, "White Tail Disease": 0},
+"Gill Disease": {"Red Disease": 2, "Aeromoniasis": 0, "Gill Disease": 95, "Saprolegniasis": 0, "Healthy Fish": 0, "Parasitic
+Disease": 1, "White Tail Disease": 2},
+"Saprolegniasis": {"Red Disease": 5, "Aeromoniasis": 1, "Gill Disease": 0, "Saprolegniasis": 90, "Healthy Fish": 1, "Parasitic
+Disease": 3, "White Tail Disease": 0},
+"Healthy Fish": {"Red Disease": 1, "Aeromoniasis": 0, "Gill Disease": 0, "Saprolegniasis": 0, "Healthy Fish": 99, "Parasitic
+Disease": 0, "White Tail Disease": 0},
+"Parasitic Disease": {"Red Disease": 0, "Aeromoniasis": 3, "Gill Disease": 7, "Saprolegniasis": 1, "Healthy Fish": 4,
+"Parasitic Disease": 83, "White Tail Disease": 2},
+"White Tail Disease": {"Red Disease": 4, "Aeromoniasis": 0, "Gill Disease": 3, "Saprolegniasis": 2, "Healthy Fish": 5,
+"Parasitic Disease": 1, "White Tail Disease": 85}
+}
+from pycm import ConfusionMatrix
+# Standardized labels: Title Case for consistency
+# Create confusion matrix object
+cm2 = ConfusionMatrix(matrix=confusion_matrix)
+# Display matrix
+print(cm2)
+
+
+
+
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.applications.vgg16 import preprocess_input,
+decode_predictions
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+import numpy as np
+model = VGG16(weights="imagenet")
+photo = load_img("bird.png", target_size = (224, 224, 3))
+photo_arr = img_to_array(photo)
+photo_arr = np.expand_dims(photo_arr, axis = 0)
+preds = model.predict(photo_arr)
+print("Prediction :", decode_predictions(preds))
