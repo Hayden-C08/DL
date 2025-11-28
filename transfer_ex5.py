@@ -39,18 +39,20 @@ def predict_image(image_path):
 # Predict all images in a folder
 # -----------------------------
 def predict_folder(folder_path):
-    """Predict all images inside a folder."""
+    """Predict all images inside subfolders too."""
     results = []
-    supported_ext = ('.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff')
+    supported_ext = (".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff")
 
-    for filename in sorted(os.listdir(folder_path)):
-        if filename.lower().endswith(supported_ext):
-            image_path = os.path.join(folder_path, filename)
-            pred_class, confidence = predict_image(image_path)
-            results.append((filename, pred_class, confidence))
-            print(f"{filename}: {pred_class} ({confidence * 100:.2f}%)")
+    for root, dirs, files in os.walk(folder_path):
+        for filename in sorted(files):
+            if filename.lower().endswith(supported_ext):
+                image_path = os.path.join(root, filename)
+                pred_class, confidence = predict_image(image_path)
+                results.append((image_path, pred_class, confidence))
+                print(f"{image_path}: {pred_class} ({confidence * 100:.2f}%)")
 
     return results
+
 
 # -----------------------------
 # Example usage
