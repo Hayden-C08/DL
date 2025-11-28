@@ -120,3 +120,127 @@ results = predict_folder(folder_path, use_gradcam=True)
 #SIR CODE
 #########################################################
 
+import os
+import numpy as np
+import keras
+from keras.preprocessing.image import load_img, img_to_array
+from keras.models import load_model
+from keras import backend as K
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+K.set_learning_phase(0)
+
+# ---------------------------------------
+# 1. LOAD MODELS (feature extractor + head)
+# ---------------------------------------
+feature_extractor = load_model("feature_extractor.h5")
+classifier = load_model("classifier.h5")
+
+classes = ['CNV', 'DME', 'DRUSEN', 'NORMAL']
+
+# ---------------------------------------
+# 2. PREPROCESS FUNCTION
+# ---------------------------------------
+def preprocess_input(img):
+    x = img_to_array(img) / 255.0
+    return np.expand_dims(x, axis=0)
+
+# ---------------------------------------
+# 3. FEATURE EXTRACTION + CLASSIFICATION
+# ---------------------------------------
+def predict_image(img):
+    x = preprocess_input(img)
+    feat = feature_extractor.predict(x)     # (1, 7, 7, 1920)
+    pred = classifier.predict(feat)[0]
+    cls = np.argmax(pred)
+    return cls, classes[cls], pred
+
+def predict_from_image_path(path):
+    img = load_img(path, target_size=(224, 224))
+    return predict_image(img)
+
+# ---------------------------------------
+# 4. GRAD-CAM FOR FEATURE EXTRACTION MODEL
+# ---------------------------------------
+def grad_CAM(image_path):
+    img = load_img(image_path, target_size=(224, 224))
+    x = preprocess_input(img)
+
+    # Forward pass to get feature map
+    conv_layer = feature_extractor.get_layer("conv5_block32_concat")
+    heat_model = keras.models.Model(
+        inputs=feature_extractor.input,
+        outputs=[conv_layer.output, feature_extractor.output]
+    )
+
+    conv_output, preds = heat_model.predict(x)
+
+    # Predicted class
+    pred_class = np.argmax(classifier.predict(preds))
+
+    # Gradient wrt feature map
+    class_output = classifier.output[:, pred_class]
+    grads = K.gradients(class_output, conv_layer.output)[0]
+    pooled_grads = K.mean(grads, axis=(0, 1, 2))
+
+    # Get numpy values
+    iterate = K.function(
+        [feature_extractor.input],
+        [pooled_grads, conv_layer.output[0]]
+    )
+    pooled_grads_value, conv_layer_output_value = iterate([x])
+
+    # Weight feature maps by gradients
+    for i in range(conv_layer_output_value.shape[-1]):
+        conv_layer_output_value[:, :, i] *= pooled_grads_value[i]
+
+    # Create heatmap
+    heatmap = np.mean(conv_layer_output_value, axis=-1)
+    heatmap = np.maximum(heatmap, 0)
+    heatmap /= np.max(heatmap)
+
+    # Read original image
+    img_cv = cv2.imread(image_path)
+    img_cv = cv2.resize(img_cv, (224, 224))
+
+    # Resize heatmap to image size
+    heatmap = cv2.resize(heatmap, (img_cv.shape[1], img_cv.shape[0]))
+    heatmap = np.uint8(255 * heatmap)
+
+    heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+
+    # Superimpose heatmap
+    superimposed_img = heatmap * 0.4 + img_cv
+
+    # Display
+    plt.figure(figsize=(10, 6))
+    plt.imshow(superimposed_img[..., ::-1])
+    plt.axis("off")
+    plt.show()
+
+# ---------------------------------------
+# 6. TEST PREDICTION + GRAD-CAM
+# ---------------------------------------
+path = "test_image.jpeg"
+pred, name, prob = predict_from_image_path(path)
+print("Prediction:", pred, name)
+grad_CAM(path)
+
+# ---------------------------------------
+# 7. CHECK MULTIPLE IMAGES
+# ---------------------------------------
+for i, c in enumerate(classes):
+    folder = './simple/test/' + c + '/'
+    for file in os.listdir(folder):
+        if file.endswith(".jpeg"):
+            image_path = folder + file
+            p, cname, _ = predict_from_image_path(image_path)
+
+            if p == i:
+                print(file, p, cname)
+            else:
+                print(file, p, cname, "** INCORRECT **")
+                grad_CAM(image_path)
+
