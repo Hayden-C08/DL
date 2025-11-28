@@ -13,7 +13,8 @@ feature_extractor = DenseNet201(weights='imagenet', include_top=False, pooling=N
 classifier = load_model("/content/feature_odir_densenet201.hdf5")
 
 # Define class names
-classes = ['A_category', 'D_category', 'G_category', 'H_category', 'M_category']  # update as per dataset
+classes = ['A_category', 'D_category', 'G_category', 'H_category', 'M_category']
+
 
 # -----------------------------
 # Image preprocessing
@@ -25,30 +26,43 @@ def load_img_array(img_path, target_size=(224,224)):
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
+
 # -----------------------------
 # Predict single image
 # -----------------------------
-def predict_from_image_path(img_path):
-    """Predict the class of a single image using feature extractor + classifier."""
+def predict_single_image(img_path):
+    """Predict one image using feature extractor + classifier."""
     img_array = load_img_array(img_path)
     img_array = preprocess_input(img_array)
-    features = feature_extractor.predict(img_array)  # shape (1,7,7,1920)
-    pred_index = np.argmax(classifier.predict(features))
-    return pred_index, classes[pred_index]
+
+    # extract features (1, 7, 7, 1920)
+    features = feature_extractor.predict(img_array)
+
+    # classifier predictions (probabilities)
+    preds = classifier.predict(features)
+
+    pred_index = np.argmax(preds)
+    pred_class = classes[pred_index]
+    confidence = float(preds[0][pred_index])
+
+    return pred_class, confidence
+
 
 # -----------------------------
-# Predict all images in a folder
+# Predict all images in folder (supports subfolders)
 # -----------------------------
 def predict_folder(folder_path):
-    """Predict all images inside subfolders too."""
+    """Predict all images inside subfolders recursively."""
     results = []
     supported_ext = (".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff")
 
     for root, dirs, files in os.walk(folder_path):
         for filename in sorted(files):
             if filename.lower().endswith(supported_ext):
+
                 image_path = os.path.join(root, filename)
-                pred_class, confidence = predict_image(image_path)
+                pred_class, confidence = predict_single_image(image_path)
+
                 results.append((image_path, pred_class, confidence))
                 print(f"{image_path}: {pred_class} ({confidence * 100:.2f}%)")
 
@@ -58,5 +72,6 @@ def predict_folder(folder_path):
 # -----------------------------
 # Example usage
 # -----------------------------
-folder_path = '/content/test_images'  # folder containing test images
+folder_path = "/content/test_images"
 results = predict_folder(folder_path)
+
